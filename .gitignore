@@ -1,0 +1,6 @@
+__pycache__/
+CIFAR10/
+.venv/
+*.pdf
+modelweights
+.DS_Store
