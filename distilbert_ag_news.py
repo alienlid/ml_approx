@@ -94,7 +94,7 @@ if __name__ == "__main__":
     #     np.arange(192, 224, 2),
     #     np.arange(224, 257, 1),
     # )) / 256
-    cs = np.linspace(0, 1, 2)
+    cs = np.linspace(0, 1, 769)
 
     if args.metric == "l2":
         l2_dists = actual_Ab_l2_dists(func)

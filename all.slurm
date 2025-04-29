@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH -J distilbert_ag_news
+#SBATCH -o distilbert_ag_news_%j.out
+#SBATCH -e distilbert_ag_news_%j.err
+#SBATCH --gres=gpu:5
+#SBATCH --time=12:00:00
+#SBATCH --mem=64G
+
+# Activate your environment
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate myenv
+
+# Define your list of methods
+methods=(
+    "weighted_rand_sparse_0"
+    "weighted_rand_sparse_1"
+    "weighted_rand_sparse_2"
+    "exact_sparse"
+    "rand_svd_0"
+    "rand_svd_1"
+    "rand_svd_2"
+    "low_rank"
+    "quantize"
+)
+
+NUM_GPUS=3
+
+for idx in "${!methods[@]}"
+do
+    method="${methods[$idx]}"
+    gpu_id=$(( idx % NUM_GPUS ))
+    echo "Running method: $method on GPU $gpu_id"
+
+    CUDA_VISIBLE_DEVICES=$gpu_id python distilbert_ag_news.py --method "$method" --metric acc > "logs/${method}.log" 2>&1 &
+done
+
+wait
+echo "All methods completed."
