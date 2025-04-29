@@ -1,9 +1,11 @@
 __pycache__/
 CIFAR10/
-.venv/
 logs/
+.venv/
 
 *.pdf
 modelweights
 .DS_Store
 .bashrc
+.gitconfig
+.gitignore
