@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH -J distilbert_ag_news
-#SBATCH -o distilbert_ag_news_%j.out
-#SBATCH -e distilbert_ag_news_%j.err
+#SBATCH -o logs/distilbert_ag_news_%j.out
+#SBATCH -e logs/distilbert_ag_news_%j.err
+#SBATCH --partition=gpu
 #SBATCH --gres=gpu:4
 #SBATCH --time=12:00:00
 #SBATCH --mem=128G
