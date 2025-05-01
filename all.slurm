@@ -9,6 +9,8 @@
 
 # Activate your environment
 source .venv/bin/activate
+# source ~/.bashrc
+# conda activate ml_approx
 
 # Define your list of methods
 methods=(
@@ -23,7 +25,7 @@ methods=(
     "quantize"
 )
 
-NUM_GPUS=4
+NUM_GPUS=4 # Modify this if not using slurm
 
 for idx in "${!methods[@]}"
 do

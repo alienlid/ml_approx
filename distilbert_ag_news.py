@@ -36,13 +36,18 @@ def actual_Ab_l2_dists(f):
 
 # _____________________________________________
 # accuracy
-def actual_Ab_accs(f):
+def actual_Ab_accs_and_losses(f):
     accs = []
+    losses = []
     model.eval()
+    loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
     for c in tqdm(cs):
         weight_approx = f(weight, c)
         model.pre_classifier.weight.data = torch.from_numpy(weight_approx).cuda()
         metric = evaluate.load("accuracy")
+
+        total_loss = 0.0
+
         for batch in test_loader:
             input_ids = batch["input_ids"].cuda()
             attention_mask = batch["attention_mask"].cuda()
@@ -51,13 +56,16 @@ def actual_Ab_accs(f):
             with torch.no_grad():
                 outputs = model(input_ids=input_ids, attention_mask=attention_mask)
                 predictions = torch.argmax(outputs.logits, dim=-1)
+                loss = loss_fn(outputs.logits, labels)
+                total_loss += loss.item()
 
             metric.add_batch(predictions=predictions.cpu(), references=labels.cpu())
 
         result = metric.compute()
         accs.append(result["accuracy"])
-        tqdm.write(f"method: {args.method}, c: {c}, accuracy: {result['accuracy']}")
-    return accs
+        losses.append(total_loss / len(test_loader.dataset))
+        tqdm.write(f"method: {args.method}, c: {c}, acc: {accs[-1]}, loss: {losses[-1]}")
+    return accs, losses
 
 # _____________________________________________
 
@@ -88,20 +96,15 @@ if __name__ == "__main__":
     test_loader = DataLoader(encoded, batch_size=64)
 
     # compression ratios
-    # cs = np.concat((
-    #     np.arange(0, 128, 8),
-    #     np.arange(128, 192, 4),
-    #     np.arange(192, 224, 2),
-    #     np.arange(224, 257, 1),
-    # )) / 256
     cs = np.linspace(0, 1, 769)
 
     if args.metric == "l2":
         l2_dists = actual_Ab_l2_dists(func)
         np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_l2_{args.method}.npy", l2_dists)
     elif args.metric == "acc":
-        accs = actual_Ab_accs(func)
+        accs, losses = actual_Ab_accs_and_losses(func)
         np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_acc_{args.method}.npy", accs)
+        np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_loss_{args.method}.npy", losses)
     else: 
         raise ValueError(f"Unknown metric: {args.metric}")
     
