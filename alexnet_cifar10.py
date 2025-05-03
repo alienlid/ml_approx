@@ -78,24 +78,29 @@ def actual_Ab_l2_dists(f):
     return l2_dists
 
 
-def actual_Ab_accs(f):
+def actual_Ab_accs_and_losses(f):
     accs = []
+    losses = []
     model.eval()
+    loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
     for c in tqdm(cs):
         weight_approx = f(weight, c)
         model.features[21].weight.data = torch.from_numpy(weight_approx).cuda()
         total = 0
         correct = 0
+        total_loss = 0.0
         for x, y in test_loader:
             x = x.cuda()
             y = y.cuda()
             pred = model(x)
             total += len(y)
             correct += torch.sum(pred.argmax(1) == y)
+            total_loss += loss_fn(pred, y).item()
         accs.append((correct / total).item())
-        tqdm.write(f"method: {args.method}, c: {c}, accuracy: {accs[-1]}")
+        losses.append(total_loss / total)
+        tqdm.write(f"method: {args.method}, c: {c}, acc: {accs[-1]}, loss: {losses[-1]}")
 
-    return accs
+    return accs, losses
 
 if __name__ == "__main__":
     # get method from command line
@@ -139,8 +144,9 @@ if __name__ == "__main__":
         l2_dists = actual_Ab_l2_dists(func)
         np.save(f"/workspace/ml_approx/data/alexnet_cifar10/aA_ab_l2_{args.method}.npy", l2_dists)
     elif args.metric == "acc":
-        accs = actual_Ab_accs(func)
+        accs, losses = actual_Ab_accs_and_losses(func)
         np.save(f"/workspace/ml_approx/data/alexnet_cifar10/aA_ab_acc_{args.method}.npy", accs)
+        np.save(f"/workspace/ml_approx/data/alexnet_cifar10/aA_ab_loss_{args.method}.npy", losses)
     else:
         raise ValueError(f"Unknown metric: {args.metric}")
     

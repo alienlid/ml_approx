@@ -8,16 +8,16 @@
 #SBATCH --mem=128G
 
 # Activate your environment
-source .venv/bin/activate
+source ml_approx/.venv/bin/activate
 # source ~/.bashrc
 # conda activate ml_approx
 
 # Define your list of methods
 methods=(
-    "weighted_rand_sparse_0"
-    "weighted_rand_sparse_1"
-    "weighted_rand_sparse_2"
-    "exact_sparse"
+    # "weighted_rand_sparse_0"
+    # "weighted_rand_sparse_1"
+    # "weighted_rand_sparse_2"
+    # "exact_sparse"
     "rand_svd_0"
     "rand_svd_1"
     "rand_svd_2"
@@ -25,7 +25,7 @@ methods=(
     "quantize"
 )
 
-NUM_GPUS=4 # Modify this if not using slurm
+NUM_GPUS=6
 
 for idx in "${!methods[@]}"
 do
