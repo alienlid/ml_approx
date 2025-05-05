@@ -2,15 +2,15 @@
 #SBATCH -J distilbert_ag_news
 #SBATCH -o logs/distilbert_ag_news_%j.out
 #SBATCH -e logs/distilbert_ag_news_%j.err
-#SBATCH --partition=gpu
 #SBATCH --gres=gpu:4
 #SBATCH --time=12:00:00
 #SBATCH --mem=128G
+#SBATCH --exclusive
 
 # Activate your environment
-source ml_approx/.venv/bin/activate
-# source ~/.bashrc
-# conda activate ml_approx
+# source ml_approx/.venv/bin/activate
+source ~/.bashrc
+conda activate ml_approx
 
 # Define your list of methods
 methods=(
@@ -19,13 +19,13 @@ methods=(
     # "weighted_rand_sparse_2"
     # "exact_sparse"
     "rand_svd_0"
-    "rand_svd_1"
+    # "rand_svd_1"
     "rand_svd_2"
     "low_rank"
     "quantize"
 )
 
-NUM_GPUS=6
+NUM_GPUS=4
 
 for idx in "${!methods[@]}"
 do

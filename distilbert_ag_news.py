@@ -103,8 +103,8 @@ if __name__ == "__main__":
         np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_l2_{args.method}.npy", l2_dists)
     elif args.metric == "acc":
         accs, losses = actual_Ab_accs_and_losses(func)
-        np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_acc_{args.method}.npy", accs)
-        np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_loss_{args.method}.npy", losses)
+        np.save(f"/home/ddl/ml_approx/data/distilbert_ag_news/aA_ab_acc_{args.method}.npy", accs)
+        np.save(f"/home/ddl/ml_approx/data/distilbert_ag_news/aA_ab_loss_{args.method}.npy", losses)
     else: 
         raise ValueError(f"Unknown metric: {args.metric}")
     
