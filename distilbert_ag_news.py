@@ -10,14 +10,17 @@ import argparse
 
 # _____________________________________________
 # l2 error
-def actual_Ab_l2_dists(f):
-    l2_dists = []
+def actual_Ab_l2s_and_cossims(f):
+    l2s = []
+    cossims = []
     model.eval()
 
     for c in tqdm(cs):
         weight_approx = f(weight, c)
-        diff = torch.from_numpy(weight - weight_approx).cuda()
-        l2_dist = 0
+        # diff = torch.from_numpy(weight - weight_approx).cuda()
+        weight_approx = torch.from_numpy(weight_approx).cuda()
+        l2 = 0
+        cossim = 0
         for batch in test_loader:
             input_ids = batch["input_ids"].cuda()
             attention_mask = batch["attention_mask"].cuda()
@@ -25,14 +28,21 @@ def actual_Ab_l2_dists(f):
             with torch.no_grad():
                 b = model.distilbert(input_ids, attention_mask=attention_mask)
                 b = b.last_hidden_state[:, 0, :]
-                error = b @ diff.T
-                l2_dist += torch.sum(torch.norm(error, dim=1) / torch.norm(b, dim=1))
+                error = b @ (weight_cuda - weight_approx).T
+                l2 += torch.sum(torch.norm(error, dim=1) / torch.norm(b, dim=1))
+                cossim += torch.sum(torch.nn.functional.cosine_similarity(
+                    b @ weight_cuda.T,
+                    b @ weight_approx.T,
+                    dim=1,
+                ))
         
-        l2_dist /= len(test_loader.dataset) * np.linalg.norm(weight)
-        l2_dists.append(l2_dist.item())
-        tqdm.write(f"method: {args.method}, c: {c}, l2_dist: {l2_dist.item()}")
+        l2 /= len(test_loader.dataset) * np.linalg.norm(weight)
+        cossim /= len(test_loader.dataset)
+        l2s.append(l2.item())
+        cossims.append(cossim.item())
+        tqdm.write(f"method: {args.method}, c: {c}, l2: {l2.item()}, cossim: {cossim.item()}")
 
-    return l2_dists
+    return l2s, cossims
 
 # _____________________________________________
 # accuracy
@@ -86,6 +96,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name).cuda()
     weight = model.pre_classifier.weight.data.cpu().numpy()
+    weight_cuda = torch.from_numpy(weight).cuda() # dumb code lmao
 
     def preprocess(example):
         return tokenizer(example["text"], truncation=True, padding="max_length", max_length=256)
@@ -99,8 +110,9 @@ if __name__ == "__main__":
     cs = np.linspace(0, 1, 769)
 
     if args.metric == "l2":
-        l2_dists = actual_Ab_l2_dists(func)
-        np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_l2_{args.method}.npy", l2_dists)
+        l2s, cossims = actual_Ab_l2s_and_cossims(func)
+        # np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_l2_{args.method}.npy", l2s)
+        np.save(f"/workspace/ml_approx/data/distilbert_ag_news/aA_ab_cossim_{args.method}.npy", cossims)
     elif args.metric == "acc":
         accs, losses = actual_Ab_accs_and_losses(func)
         np.save(f"/home/ddl/ml_approx/data/distilbert_ag_news/aA_ab_acc_{args.method}.npy", accs)
