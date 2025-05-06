@@ -3,7 +3,7 @@ CIFAR10/
 logs/
 .venv/
 
-*.pdf
+meng_proposal.pdf
 modelweights
 .DS_Store
 .bashrc
